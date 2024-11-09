@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(PROJECT_VERSION_MAJOR 1)
-set(PROJECT_VERSION_MINOR 2)
-set(PROJECT_VERSION_PATCH 3)
+set(PROJECT_VERSION_MAJOR 0)
+set(PROJECT_VERSION_MINOR 0)
+set(PROJECT_VERSION_PATCH 1)
 
 project(AidOs3 VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 include(ExternalProject)
+include(Tools.cmake)
 
 set(GCC_VERSION 13.2.0)
 set(BINUTILS_VERSION 2.41)
@@ -45,7 +46,10 @@ endif()
 if(NOT DEFINED CMAKE_CXX_COMPILER)
     set(CMAKE_CXX_COMPILER "${PREFIX_DIR}/bin/${TARGET}-g++")
 endif()
+enable_language(ASM)
 set(CMAKE_ASM_COMPILER yasm)
+set(CMAKE_ASM_FLAGS "-f" "bin")
+set(CMAKE_DEBUG_ASM_FLAGS "-f" "elf32" "-g" "dwarf2")
 set(CMAKE_LINKER "${PREFIX_DIR}/bin/${TARGET}-ld")
 set(CMAKE_AR "${PREFIX_DIR}/bin/${TARGET}-ar")
 set(CMAKE_NM "${PREFIX_DIR}/bin/${TARGET}-nm")

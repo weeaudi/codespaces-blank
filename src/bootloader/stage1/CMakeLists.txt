@@ -1,20 +1,12 @@
 # Bootloader/CMakeLists.txt
 
 # Specify the source file
-set(BOOTLOADER_SRC boot.asm)
+set(BOOTLOADER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/boot.asm)
+set(BOOTLOADER_DEBUG_LINK ${CMAKE_CURRENT_SOURCE_DIR}/debug.ld)
 
-# Create a target to build the bootloader
-add_custom_target(bootloader ALL
-    COMMAND yasm ${CMAKE_CURRENT_SOURCE_DIR}/${BOOTLOADER_SRC} -o ${CMAKE_CURRENT_BINARY_DIR}/boot.bin
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${BOOTLOADER_SRC}
-)
-
-# Specify the output directory for the binary
-set_target_properties(bootloader PROPERTIES
-    OUTPUT_NAME "boot"
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+# Add a target to assemble the bootloader (no linking)
+assemble_binary(bootloader ${BOOTLOADER_SRC} "boot.bin")
+assemble_debug_binary(bootloader_debug ${BOOTLOADER_SRC} ${BOOTLOADER_DEBUG_LINK} "boot")
 
 # Create a target for the floppy disk image
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/floppy.img
