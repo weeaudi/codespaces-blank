@@ -64,8 +64,6 @@ add_custom_target(IncrementBuildNumber ALL
 # Read the incremented value from the cache file
 set(CACHE_FILE "${CMAKE_SOURCE_DIR}/build/BuildNumberCache.txt")
 
-set(DOLLAR_SIGN "\\$")
-
 add_custom_target(PrintBuildMessage ALL
     DEPENDS IncrementBuildNumber
     COMMAND /bin/sh -c "echo Building: ${PROJECT_NAME} Version ${PROJECT_VERSION} Build Number: $$\\(cat ${CACHE_FILE}\\)"
