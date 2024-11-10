@@ -13,7 +13,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/floppy.img
     COMMAND ${CMAKE_COMMAND} -E echo "Creating floppy disk image..."
     COMMAND dd if=/dev/zero of=${CMAKE_CURRENT_BINARY_DIR}/floppy.img bs=512 count=2880
     COMMAND dd if=${CMAKE_CURRENT_BINARY_DIR}/boot.bin of=${CMAKE_CURRENT_BINARY_DIR}/floppy.img bs=512 count=1 conv=notrunc
-    DEPENDS bootloader
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/boot.bin
     COMMENT "Creating floppy disk image"
 )
 

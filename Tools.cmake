@@ -15,6 +15,7 @@ function(modify_org TARGET_NAME ASM_FILE)
     add_custom_command(
         OUTPUT "${MODIFIED_ASM_FILE}-intermediate"
         COMMAND ${CMAKE_COMMAND} -E copy ${ASM_FILE} "${MODIFIED_ASM_FILE}-intermediate"
+        DEPENDS ${ASM_FILE}
         COMMENT "Copying original ASM file to build directory"
     )
     
