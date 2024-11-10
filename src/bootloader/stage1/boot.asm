@@ -45,7 +45,7 @@ print_string:
 
     ret              ; Return from the function
 
-message db 'Hello, World! this is a testy test x 5', 0  ; Null-terminated string
+message db 'Hello, World!', 0  ; Null-terminated string
 
 times 510-($-$$) db 0
 dw 0AA55h

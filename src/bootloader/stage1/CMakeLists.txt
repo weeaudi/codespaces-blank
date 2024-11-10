@@ -10,9 +10,8 @@ assemble_debug_binary(bootloader_debug ${BOOTLOADER_SRC} ${BOOTLOADER_DEBUG_LINK
 
 # Create a target for the floppy disk image
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/floppy.img
-    COMMAND ${CMAKE_COMMAND} -E echo "Creating floppy disk image..."
-    COMMAND dd if=/dev/zero of=${CMAKE_CURRENT_BINARY_DIR}/floppy.img bs=512 count=2880
-    COMMAND dd if=${CMAKE_CURRENT_BINARY_DIR}/boot.bin of=${CMAKE_CURRENT_BINARY_DIR}/floppy.img bs=512 count=1 conv=notrunc
+    COMMAND dd if=/dev/zero of=${CMAKE_CURRENT_BINARY_DIR}/floppy.img bs=512 count=2880 status=none
+    COMMAND dd if=${CMAKE_CURRENT_BINARY_DIR}/boot.bin of=${CMAKE_CURRENT_BINARY_DIR}/floppy.img bs=512 count=1 conv=notrunc status=none
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/boot.bin
     COMMENT "Creating floppy disk image"
 )
