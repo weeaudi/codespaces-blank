@@ -74,3 +74,9 @@ add_custom_target(PrintBuildMessage ALL
 add_dependencies(PrintBuildMessage IncrementBuildNumber)
 
 add_subdirectory(src)
+
+add_custom_target(run
+    COMMAND qemu-system-i386 -fda ${CMAKE_BINARY_DIR}/out/floppy.img
+    DEPENDS ${CMAKE_BINARY_DIR}/out/floppy.img
+)
+add_dependencies(run floppy_image_output)
