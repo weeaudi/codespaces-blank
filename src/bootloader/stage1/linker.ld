@@ -1,5 +1,5 @@
 ENTRY(start)
-OUTPUT_FORMAT("elf32-i386")
+OUTPUT_FORMAT("binary")
 phys = 0x7C00;
 
 SECTIONS

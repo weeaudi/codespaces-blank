@@ -48,30 +48,16 @@ if(NOT DEFINED CMAKE_CXX_COMPILER)
 endif()
 enable_language(ASM)
 set(CMAKE_ASM_COMPILER yasm)
-set(CMAKE_ASM_FLAGS "-f" "bin")
-set(CMAKE_DEBUG_ASM_FLAGS "-f" "elf32" "-g" "dwarf2")
-set(CMAKE_LINKER "${PREFIX_DIR}/bin/${TARGET}-ld")
+set(CMAKE_ASM_COMPILE_OBJECT
+    "<CMAKE_ASM_COMPILER> <FLAGS> <SOURCE> -o <OBJECT>"
+)
+set(CMAKE_ASM_FLAGS  "${CMAKE_ASM_FLAGS} -f elf32 -g dwarf2")
+set(CMAKE_LINKER "${PREFIX_DIR}/bin/${TARGET}-g++")
+set(CMAKE_ASM_LINK_EXECUTABLE "${CMAKE_LINKER} <CMAKE_ASM_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 set(CMAKE_AR "${PREFIX_DIR}/bin/${TARGET}-ar")
 set(CMAKE_NM "${PREFIX_DIR}/bin/${TARGET}-nm")
 set(CMAKE_OBJCOPY "${PREFIX_DIR}/bin/${TARGET}-objcopy")
 set(CMAKE_OBJDUMP "${PREFIX_DIR}/bin/${TARGET}-objdump")
-
-# Custom target to increment the build number and generate the header
-add_custom_target(IncrementBuildNumber ALL
-    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/Increment.cmake"
-)
-
-# Read the incremented value from the cache file
-set(CACHE_FILE "${CMAKE_SOURCE_DIR}/build/BuildNumberCache.txt")
-
-add_custom_target(PrintBuildMessage ALL
-    DEPENDS IncrementBuildNumber
-    COMMAND /bin/sh -c "echo Building: ${PROJECT_NAME} Version ${PROJECT_VERSION} Build Number: $$\\(cat ${CACHE_FILE}\\)"
-)
-
-
-# Make sure PrintBuildMessage runs after IncrementBuildNumber
-add_dependencies(PrintBuildMessage IncrementBuildNumber)
 
 add_subdirectory(src)
 
@@ -80,3 +66,12 @@ add_custom_target(run
     DEPENDS ${CMAKE_BINARY_DIR}/out/floppy.img
 )
 add_dependencies(run floppy_image_output)
+
+add_custom_target(debug
+    COMMAND qemu-system-i386 -debugcon stdio -fda ${CMAKE_BINARY_DIR}/out/floppy.img -s -S -m 128M
+    DEPENDS ${CMAKE_BINARY_DIR}/out/floppy.img
+)
+
+add_dependencies(debug floppy_image_output)
+add_dependencies(debug stage1_debug_output)
+

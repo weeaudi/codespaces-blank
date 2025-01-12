@@ -1,7 +1,15 @@
 ; boot.asm - A simple bootloader that prints "Hello, World!"
 
-org 0x7C00
 bits 16
+
+global start
+
+section .fsjump
+
+    jmp short start
+    nop
+
+section .text
 
 start:
 
@@ -47,5 +55,4 @@ print_string:
 
 message db 'Hello, World!', 0  ; Null-terminated string
 
-times 510-($-$$) db 0
-dw 0AA55h
+section bios_footer

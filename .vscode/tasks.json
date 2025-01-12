@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start QEMU",
+            "type": "shell",
+            "command": "./scripts/gui_debug.sh",
+            "args": [],
+            "group": {
+                "kind": "none",
+                "isDefault": true
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "endsPattern": {"regexp": "^WARNING: Image format was not specified"},
+                    "activeOnStart": true,
+                    "beginsPattern": {
+                        "regexp": "^QEMU is running"
+                    }
+                }
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "runOptions": {
+                "runOn": "default"
+            }
+        }
+    ]
+}
