@@ -14,12 +14,12 @@ add_custom_target(floppy_image ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/floppy.im
 add_dependencies(floppy_image bootloader)
 
 add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/out/floppy.img
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/out/floppy.img
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/floppy.img ${CMAKE_BINARY_DIR}/out/floppy.img
+    OUTPUT ${CMAKE_BINARY_DIR}/out/floppy-${CMAKE_PROJECT_VERSION}.img
+    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/out/floppy-${CMAKE_PROJECT_VERSION}.img
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/floppy.img ${CMAKE_BINARY_DIR}/out/floppy-${CMAKE_PROJECT_VERSION}.img
     DEPENDS ${CMAKE_BINARY_DIR}/src/floppy.img
 )
-add_custom_target(floppy_image_output ALL DEPENDS ${CMAKE_BINARY_DIR}/out/floppy.img)
+add_custom_target(floppy_image_output ALL DEPENDS ${CMAKE_BINARY_DIR}/out/floppy-${CMAKE_PROJECT_VERSION}.img)
 add_dependencies(floppy_image_output floppy_image)
 
 add_custom_command(
