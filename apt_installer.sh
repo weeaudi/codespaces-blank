@@ -1,2 +1,2 @@
 apt update
-apt install libmpc-dev libgmp-dev texinfo yasm qemu-system-i386 -y
+apt install libmpc-dev libgmp-dev cmake texinfo yasm qemu-system-i386 -y
