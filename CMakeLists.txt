@@ -61,23 +61,22 @@ set(CMAKE_NM "${PREFIX_DIR}/bin/${TARGET}-nm")
 set(CMAKE_OBJCOPY "${PREFIX_DIR}/bin/${TARGET}-objcopy")
 set(CMAKE_OBJDUMP "${PREFIX_DIR}/bin/${TARGET}-objdump")
 
-add_subdirectory(src)
+add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+add_subdirectory(${CMAKE_SOURCE_DIR}/image)
+
+set(DISK_IMAGE "${CMAKE_BINARY_DIR}/out/aidos_${CMAKE_PROJECT_VERSION}.raw")
 
 add_custom_target(run
-    COMMAND qemu-system-i386 -fda ${CMAKE_BINARY_DIR}/out/floppy-${CMAKE_PROJECT_VERSION}.img
-    DEPENDS ${CMAKE_BINARY_DIR}/out/floppy-${CMAKE_PROJECT_VERSION}.img
+    COMMAND qemu-system-i386 -hda ${DISK_IMAGE}
+    DEPENDS build_disk
+    COMMENT "Running the boot image in QEMU"
 )
-add_dependencies(run floppy_image_output)
 
 add_custom_target(debug
-    COMMAND qemu-system-i386 -debugcon stdio -fda ${CMAKE_BINARY_DIR}/out/floppy-${CMAKE_PROJECT_VERSION}.img -s -S -m 128M
-    DEPENDS ${CMAKE_BINARY_DIR}/out/floppy-${CMAKE_PROJECT_VERSION}.img
+    COMMAND qemu-system-i386 -debugcon stdio -hda ${DISK_IMAGE} -s -S -m 128M
+    DEPENDS build_disk stage1_debug_output
+    COMMENT "Debugging the boot image in QEMU"
 )
-
-add_dependencies(debug floppy_image_output)
-add_dependencies(debug stage1_debug_output)
-
-
 
 # Define a custom target to process the .asm file
 add_custom_target(asm4doxy
@@ -96,4 +95,3 @@ add_custom_target(gendocs
     VERBATIM
     DEPENDS asm4doxy
 )
-

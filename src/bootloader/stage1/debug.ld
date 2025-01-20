@@ -1,6 +1,6 @@
 ENTRY(start)
 OUTPUT_FORMAT("elf32-i386")
-phys = 0x7C00;
+phys = 0x700;
 
 SECTIONS
 {
