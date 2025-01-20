@@ -13,11 +13,11 @@
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 },
-                // {
-                //     "description": "Load stage2 symbol file",
-                //     "text": "add-symbol-file ${workspaceFolder}/build/out/debug/stage1-debug",
-                //     "ignoreFailures": true
-                // }
+                {
+                    "description": "Load stage2 symbol file",
+                    "text": "add-symbol-file ${workspaceFolder}/build/out/debug/stage2.elf",
+                    "ignoreFailures": true
+                }
             ],
             "cwd": "${workspaceFolder}",
             "MIMode": "gdb",

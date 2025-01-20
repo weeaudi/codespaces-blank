@@ -1,5 +1,5 @@
 set(STAGE1_BIN   "${CMAKE_BINARY_DIR}/src/bootloader/stage1/boot.bin")
-set(STAGE2_ELF   "${CMAKE_SOURCE_DIR}/tmp/stage2.elf")
+set(STAGE2_ELF   "${CMAKE_BINARY_DIR}/src/bootloader/stage2/stage2.elf")
 set(KERNEL_ELF   "${CMAKE_SOURCE_DIR}/tmp/kernel.elf")
 
 set(DISKSIZE_BYTES 33554432) # 32 * 1024 * 1024
@@ -31,6 +31,6 @@ add_custom_command(
 )
 
 add_custom_target(build_disk ALL
-    DEPENDS "${DISK_IMAGE}" bootloader
+    DEPENDS "${DISK_IMAGE}" bootloader stage2
     COMMENT "Partitioned disk image creation complete."
 )

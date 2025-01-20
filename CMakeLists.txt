@@ -74,7 +74,7 @@ add_custom_target(run
 
 add_custom_target(debug
     COMMAND qemu-system-i386 -debugcon stdio -hda ${DISK_IMAGE} -s -S -m 128M
-    DEPENDS build_disk stage1_debug_output
+    DEPENDS build_disk stage1_debug_output stage2_debug_output
     COMMENT "Debugging the boot image in QEMU"
 )
 
