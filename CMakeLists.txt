@@ -77,3 +77,23 @@ add_custom_target(debug
 add_dependencies(debug floppy_image_output)
 add_dependencies(debug stage1_debug_output)
 
+
+
+# Define a custom target to process the .asm file
+add_custom_target(asm4doxy
+    COMMAND ./scripts/asm4doxy.pl src/bootloader/stage1/boot.asm -od src/bootloader/stage1/
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}  # Set working directory
+    COMMENT "Running asm4doxy to preprocess boot.asm for Doxygen"
+    VERBATIM
+)
+
+# Define a custom target to run Doxygen
+find_package(Doxygen REQUIRED)
+add_custom_target(gendocs
+    COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}  # Set working directory
+    COMMENT "Running Doxygen to generate documentation"
+    VERBATIM
+    DEPENDS asm4doxy
+)
+
