@@ -4,4 +4,4 @@ Tools/
 gitpod\ tools/
 Doxygen-Out/
 asm4doxy.pl
--asm.c
+*-asm.c
