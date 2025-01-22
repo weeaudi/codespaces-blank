@@ -1,5 +1,5 @@
 ENTRY(entry)
-OUTPUT_FORMAT("elf32-i386")
+OUTPUT_FORMAT("elf64-x86-64")
 phys = 0x00001000;
 
 SECTIONS
