@@ -28,7 +28,7 @@ ExternalProject_Add(
     PREFIX ${32PREFIX_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP true
     CONFIGURE_COMMAND <SOURCE_DIR>/configure --target=${32TARGET} --prefix=${32PREFIX_DIR} --with-sysroot= --disable-nls --disable-werror
-    BUILD_COMMAND make -j4 
+    BUILD_COMMAND make -j16
     INSTALL_COMMAND make install
 )
 
@@ -39,7 +39,7 @@ ExternalProject_Add(
     PREFIX ${64PREFIX_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP true
     CONFIGURE_COMMAND <SOURCE_DIR>/configure --target=${64TARGET} --prefix=${64PREFIX_DIR} --with-sysroot= --disable-nls --disable-werror
-    BUILD_COMMAND make -j4 
+    BUILD_COMMAND make -j16
     INSTALL_COMMAND make install
 )
 
@@ -51,7 +51,7 @@ ExternalProject_Add(
     PREFIX ${32PREFIX_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP true
     CONFIGURE_COMMAND <SOURCE_DIR>/configure --target=${32TARGET} --prefix=${32PREFIX_DIR} --disable-nls --enable-languages=c,c++ --without-headers
-    BUILD_COMMAND make -j4 all-gcc all-target-libgcc
+    BUILD_COMMAND make -j16 all-gcc all-target-libgcc
     INSTALL_COMMAND make install-gcc install-target-libgcc
 )
 
@@ -63,7 +63,7 @@ ExternalProject_Add(
     PREFIX ${64PREFIX_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP true
     CONFIGURE_COMMAND <SOURCE_DIR>/configure --target=${64TARGET} --prefix=${64PREFIX_DIR} --disable-nls --enable-languages=c,c++ --without-headers
-    BUILD_COMMAND make -j4 all-gcc all-target-libgcc
+    BUILD_COMMAND make -j16 all-gcc all-target-libgcc
     INSTALL_COMMAND make install-gcc install-target-libgcc
 )
 
