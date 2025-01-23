@@ -24,6 +24,7 @@ set(BINUTILS_URL "https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.
 ExternalProject_Add(
     binutils32
     URL ${BINUTILS_URL}
+    URL_MD5 9ef8d27543a854eaecc8ceeadc100697
     PREFIX ${32PREFIX_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP true
     CONFIGURE_COMMAND <SOURCE_DIR>/configure --target=${32TARGET} --prefix=${32PREFIX_DIR} --with-sysroot= --disable-nls --disable-werror
@@ -34,6 +35,7 @@ ExternalProject_Add(
 ExternalProject_Add(
     binutils64
     URL ${BINUTILS_URL}
+    URL_MD5 9ef8d27543a854eaecc8ceeadc100697
     PREFIX ${64PREFIX_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP true
     CONFIGURE_COMMAND <SOURCE_DIR>/configure --target=${64TARGET} --prefix=${64PREFIX_DIR} --with-sysroot= --disable-nls --disable-werror
@@ -45,6 +47,7 @@ ExternalProject_Add(
     gcc32
     DEPENDS binutils32
     URL ${GCC_URL}
+    URL_MD5 aeb5ac806c34d47e725bdd025f34bac4
     PREFIX ${32PREFIX_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP true
     CONFIGURE_COMMAND <SOURCE_DIR>/configure --target=${32TARGET} --prefix=${32PREFIX_DIR} --disable-nls --enable-languages=c,c++ --without-headers
@@ -56,6 +59,7 @@ ExternalProject_Add(
     gcc64
     DEPENDS binutils64
     URL ${GCC_URL}
+    URL_MD5 aeb5ac806c34d47e725bdd025f34bac4
     PREFIX ${64PREFIX_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP true
     CONFIGURE_COMMAND <SOURCE_DIR>/configure --target=${64TARGET} --prefix=${64PREFIX_DIR} --disable-nls --enable-languages=c,c++ --without-headers
