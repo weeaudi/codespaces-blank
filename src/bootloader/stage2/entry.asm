@@ -21,14 +21,14 @@ section .entry
     extern _init
     extern Start
 
-    global entry
+    ; global entry
 
 section .text
 
     ;;
     ; @brief the entry to the second stage
     ;;
-    entry:
+    entry_nomore:
         cli
         mov ax, ds 
         mov ss, ax
