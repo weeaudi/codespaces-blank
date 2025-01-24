@@ -57,6 +57,11 @@ section .text
         mov ax, 0x1112
         int 0x10
 
+        ; disable cursor
+        mov ah, 0x1
+        mov ch, 0x3F
+        int 10h
+
         mov si, bit16_msg
         call puts
 
