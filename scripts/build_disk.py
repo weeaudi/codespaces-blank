@@ -166,13 +166,90 @@ def install_stage2(target, stage2_bin, boot_data_lba, offset=0, limit=0):
                 ftarget.write(entry['load_addr'].to_bytes(4, 'little'))
                 ftarget.write(entry['count'].to_bytes(2, 'little'))
 
-def mount_fs(image_path: str, mount_point: str):
-    
-    sh.guestmount('--add', image_path, '--mount', '/dev/sda1', mount_point)
+mount = False
+libguestfs = False
+
+def mount_fs(image_path: str, mount_point: str, partition_offset_sectors: int = 2048):
+    """
+    Tries to mount the filesystem using libguestfs first. If that fails, uses the `mount` command with an offset.
+    """
+    offset_bytes = partition_offset_sectors * SECTOR_SIZE
+    os.makedirs(mount_point, exist_ok=True)
+
+    try:
+        # Attempt to use libguestfs
+        print(f"Attempting to mount using libguestfs...")
+        sh.guestmount('--add', image_path, '--mount', '/dev/sda1', mount_point)
+        print(f"Mounted {image_path} at {mount_point} using libguestfs.")
+        libguestfs = True
+    except sh.ErrorReturnCode as e:
+        print(f"libguestfs mount failed: {e}")
+        print(f"Falling back to mount with offset...")
+        try:
+            # Fallback to `mount` command
+            sh.sudo.mount(
+                '-o', f'loop,offset={offset_bytes}',
+                image_path, mount_point
+            )
+            print(f"Mounted {image_path} at {mount_point} using loop device with offset {offset_bytes}.")
+            mount = True
+        except sh.ErrorReturnCode as mount_error:
+            print(f"Failed to mount using fallback method: {mount_error}")
+            raise RuntimeError("Failed to mount the image using both libguestfs and mount.")
 
 def unmount_fs(mount_point: str):
-    time.sleep(2)  # small delay
-    sh.fusermount('-u', mount_point)
+    """
+    Unmounts the filesystem. If libguestfs was used, uses fusermount. Otherwise, uses umount.
+    """
+    try:
+        if libguestfs:
+            print(f"Attempting to unmount using fusermount (libguestfs)...")
+            sh.fusermount('-u', mount_point)
+            print(f"Unmounted {mount_point} using fusermount.")
+        else:
+            print(f"Attempting to unmount using umount...")
+            sh.sudo.umount(mount_point)
+            print(f"Unmounted {mount_point} using umount.")
+    except sh.ErrorReturnCode as e:
+        print(f"Failed to unmount {mount_point}: {e}")
+        raise
+
+
+
+def build_disk(image_path, stage1_bin, stage2_bin, kernel_path, size_bytes, fs_type, extra_files=None):
+    """
+    Updated to support both libguestfs and sudo for mounting.
+    """
+    ...
+    try:
+        print(f"> Mounting {image_path} at {mount_dir}...")
+        mount_fs(image_path, mount_dir)
+
+        # Copy the kernel into /boot
+        boot_dir = os.path.join(mount_dir, 'boot')
+        os.makedirs(boot_dir, exist_ok=True)
+        print(f"  - copying kernel: {kernel_path}")
+        copy2(kernel_path, boot_dir)
+
+        # Copy any extra files
+        if extra_files:
+            for f in extra_files:
+                rel_name = os.path.basename(f)
+                dst_path = os.path.join(mount_dir, rel_name)
+                if os.path.isdir(f):
+                    os.makedirs(dst_path, exist_ok=True)
+                else:
+                    print(f"  - copying extra file: {f}")
+                    copy2(f, dst_path)
+
+    finally:
+        print("> Unmounting...")
+        try:
+            unmount_fs(mount_dir)
+        except Exception as e:
+            print("Warning: unmount failed:", e)
+
+        os.rmdir(mount_dir)
 
 def build_disk(image_path, stage1_bin, stage2_bin, kernel_path, size_bytes, fs_type, extra_files=None):
     """
