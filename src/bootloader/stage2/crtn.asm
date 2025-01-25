@@ -1,4 +1,4 @@
-bits 64
+[bits 64]
 
 section .init
     ; gcc will put the content of crtbegin.o here

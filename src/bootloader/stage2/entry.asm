@@ -28,7 +28,7 @@ section .text
     ;;
     ; @brief the entry to the second stage
     ;;
-    entry_nomore:
+    entry:
         cli
         mov ax, ds 
         mov ss, ax

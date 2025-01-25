@@ -1,10 +1,14 @@
 
 file(GLOB CPP_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-file(GLOB ASM_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/**/*.asm)
+file(GLOB RECRSIVE_CPP_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/**/*.cpp)
+file(GLOB ASM_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.asm)
+file(GLOB RECURSIVE_ASM_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/**/*.asm)
 
 set(STAGE2_SRC 
-    ${ASM_SOURCE_FILES}
+    ${RECURSIVE_CPP_SOURCE_FILES}
     ${CPP_SOURCE_FILES}
+    ${RECURSIVE_ASM_SOURCE_FILES}
+    ${ASM_SOURCE_FILES}
 )
 set(STAGE2_LINK ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
 
@@ -19,9 +23,9 @@ target_link_options(stage2 PRIVATE
     -Wl,-T ${STAGE2_LINK}               # Use linker script
     -Wl,--no-warn-rwx-segment           # Suppress warnings
     -nostdlib                           # Avoid linking standard libraries
-    ${CRTBEGIN_OBJ}                     # Precompiled crtbegin.o
     -Wl,-Map=${CMAKE_BINARY_DIR}/src/bootloader/stage2/stage2.map  # Generate map file
-    ${CRTEND_OBJ}                       # Precompiled crtend.o
+    ${CRTBEGIN_OBJ}  
+    ${CRTEND_OBJ}
 )
 
 add_custom_command( 

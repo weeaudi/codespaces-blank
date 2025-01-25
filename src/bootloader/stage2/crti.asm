@@ -1,4 +1,4 @@
-bits 64
+[bits 64]
 
 section .init
 global _init
