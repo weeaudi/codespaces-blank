@@ -167,7 +167,7 @@ def install_stage2(target, stage2_bin, boot_data_lba, offset=0, limit=0):
                 ftarget.write(entry['count'].to_bytes(2, 'little'))
 
 mount = False
-libguestfs = False
+used_libguestfs = False
 
 def mount_fs(image_path: str, mount_point: str, partition_offset_sectors: int = 2048):
     """
@@ -178,10 +178,9 @@ def mount_fs(image_path: str, mount_point: str, partition_offset_sectors: int = 
 
     try:
         # Attempt to use libguestfs
-        print(f"Attempting to mount using libguestfs...")
         sh.guestmount('--add', image_path, '--mount', '/dev/sda1', mount_point)
-        print(f"Mounted {image_path} at {mount_point} using libguestfs.")
-        libguestfs = True
+        global used_libguestfs
+        used_libguestfs = True
     except sh.ErrorReturnCode as e:
         print(f"libguestfs mount failed: {e}")
         print(f"Falling back to mount with offset...")
@@ -202,14 +201,12 @@ def unmount_fs(mount_point: str):
     Unmounts the filesystem. If libguestfs was used, uses fusermount. Otherwise, uses umount.
     """
     try:
-        if libguestfs:
-            print(f"Attempting to unmount using fusermount (libguestfs)...")
+        print(used_libguestfs)
+        if used_libguestfs:
+            time.sleep(2)
             sh.fusermount('-u', mount_point)
-            print(f"Unmounted {mount_point} using fusermount.")
         else:
-            print(f"Attempting to unmount using umount...")
             sh.sudo.umount(mount_point)
-            print(f"Unmounted {mount_point} using umount.")
     except sh.ErrorReturnCode as e:
         print(f"Failed to unmount {mount_point}: {e}")
         raise 
