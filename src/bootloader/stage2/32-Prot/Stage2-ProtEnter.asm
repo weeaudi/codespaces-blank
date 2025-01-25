@@ -2,6 +2,8 @@
 
 global to_32_prot
 
+extern to_64_prot
+
 %define ENDL 0x0A, 0x0D
 
 KbdControllerDataPort:              equ 0x60
@@ -37,6 +39,9 @@ section .text
 
     .PMODE32:
         [bits 32]
+
+        call to_64_prot
+
         cli
         hlt
 

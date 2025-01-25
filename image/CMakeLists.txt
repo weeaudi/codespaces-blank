@@ -13,6 +13,7 @@ set(EXTRA_FILES
 
 add_custom_command(
     OUTPUT "${DISK_IMAGE}"
+    COMMAND mkdir ${CMAKE_BINARY_DIR}/out -p
     COMMAND ${CMAKE_COMMAND} -E echo ">> Building full disk image with partitions..."
     COMMAND python3 "${CMAKE_SOURCE_DIR}/scripts/build_disk.py"
             "${DISK_IMAGE}"

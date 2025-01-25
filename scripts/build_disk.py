@@ -212,44 +212,10 @@ def unmount_fs(mount_point: str):
             print(f"Unmounted {mount_point} using umount.")
     except sh.ErrorReturnCode as e:
         print(f"Failed to unmount {mount_point}: {e}")
-        raise
+        raise 
 
 
 
-def build_disk(image_path, stage1_bin, stage2_bin, kernel_path, size_bytes, fs_type, extra_files=None):
-    """
-    Updated to support both libguestfs and sudo for mounting.
-    """
-    ...
-    try:
-        print(f"> Mounting {image_path} at {mount_dir}...")
-        mount_fs(image_path, mount_dir)
-
-        # Copy the kernel into /boot
-        boot_dir = os.path.join(mount_dir, 'boot')
-        os.makedirs(boot_dir, exist_ok=True)
-        print(f"  - copying kernel: {kernel_path}")
-        copy2(kernel_path, boot_dir)
-
-        # Copy any extra files
-        if extra_files:
-            for f in extra_files:
-                rel_name = os.path.basename(f)
-                dst_path = os.path.join(mount_dir, rel_name)
-                if os.path.isdir(f):
-                    os.makedirs(dst_path, exist_ok=True)
-                else:
-                    print(f"  - copying extra file: {f}")
-                    copy2(f, dst_path)
-
-    finally:
-        print("> Unmounting...")
-        try:
-            unmount_fs(mount_dir)
-        except Exception as e:
-            print("Warning: unmount failed:", e)
-
-        os.rmdir(mount_dir)
 
 def build_disk(image_path, stage1_bin, stage2_bin, kernel_path, size_bytes, fs_type, extra_files=None):
     """

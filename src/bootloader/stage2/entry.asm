@@ -449,4 +449,3 @@ section .bss
         resb 4096
     page_table_l2:
         resb 4096
-
