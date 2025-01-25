@@ -45,5 +45,5 @@ section .data
 
 section .rodata
 
-    to_long_msg: db "Switching to 64 bit long mode!!                                                 ", 0
+    to_long_msg: db "Switching to 64 bit long mode!!", 0
   
