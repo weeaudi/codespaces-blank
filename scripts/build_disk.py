@@ -201,7 +201,6 @@ def unmount_fs(mount_point: str):
     Unmounts the filesystem. If libguestfs was used, uses fusermount. Otherwise, uses umount.
     """
     try:
-        print(used_libguestfs)
         if used_libguestfs:
             time.sleep(2)
             sh.fusermount('-u', mount_point)
@@ -281,6 +280,10 @@ def build_disk(image_path, stage1_bin, stage2_bin, kernel_path, size_bytes, fs_t
             print("Warning: unmount failed:", e)
 
         os.rmdir(mount_dir)
+
+        time.sleep(3)
+
+        print("> Done Generating Disk")
 
 def main():
     """
