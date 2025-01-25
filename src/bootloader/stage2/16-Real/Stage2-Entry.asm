@@ -52,10 +52,6 @@ section .text
         rep stosb
 
         call clr_scrn
-        
-        ; set 80*50 text mode
-        mov ax, 0x1112
-        int 0x10
 
         ; disable cursor
         mov ah, 0x1
