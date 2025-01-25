@@ -281,7 +281,7 @@ def build_disk(image_path, stage1_bin, stage2_bin, kernel_path, size_bytes, fs_t
 
         os.rmdir(mount_dir)
 
-        time.sleep(3)
+        time.sleep(1)
 
         print("> Done Generating Disk")
 
