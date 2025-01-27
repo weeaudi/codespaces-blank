@@ -15,6 +15,9 @@
 %define ENDL 0x0A, 0x0D
 
 global entry
+global drive_number
+global boot_partition_segment
+global boot_partition_offset
 
 extern detect_memory
 extern to_32_prot
@@ -36,7 +39,6 @@ section .text
         mov ss, ax
         mov sp, 0xFFF0
         mov bp, sp
-        sti
 
         mov [drive_number], dl
 

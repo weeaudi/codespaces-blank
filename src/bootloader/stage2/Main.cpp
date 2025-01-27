@@ -21,7 +21,7 @@
  * @param[in] bootDrive Drive number passed by bios
  * @param[in] partition address in seg:off for partition data
  */
-extern "C" void Start(uint16_t bootDrive, uint32_t partition){
+extern "C" void Start(uint16_t bootDrive, uint32_t partition, uint64_t memoryMapAddress){
 
     
 

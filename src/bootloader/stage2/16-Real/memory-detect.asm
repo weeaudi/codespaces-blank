@@ -45,7 +45,7 @@ section .text
         add di, 24
 
         mov si, [memory_size]
-        add si, 24
+        add si, 1
         mov [memory_size], si
 
         cmp cl, 24

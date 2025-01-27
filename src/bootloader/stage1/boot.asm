@@ -12,7 +12,7 @@
 
 bits 16
 
-%include "config.inc"
+%include "/home/aiden/Desktop/aidos3/src/bootloader/stage1/config.inc"
 
 global start
 
