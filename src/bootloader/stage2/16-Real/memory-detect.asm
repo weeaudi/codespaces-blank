@@ -110,4 +110,4 @@ section .rodata
 section .bss
 
     memory_map: resb 512
-    memory_size: db 0
+    memory_size: resb 0

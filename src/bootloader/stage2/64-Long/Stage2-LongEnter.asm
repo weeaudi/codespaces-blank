@@ -9,6 +9,7 @@ extern drive_number
 extern boot_partition_segment
 extern boot_partition_offset
 extern memory_map
+extern memory_size
 
 section .text
 
@@ -49,9 +50,10 @@ section .text
         mov rdi, rdx
 
         xor rdx, rdx
-        xor rax, rax
-        mov eax, memory_map
-        mov rdx, rax
+        mov rdx, memory_map
+
+        xor rcx, rcx
+        mov cx, [memory_size]
 
         call Start
 

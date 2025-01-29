@@ -186,7 +186,7 @@ section .text
         ret
 
     ;;
-    ; @breif check disk extended presence
+    ; @brief check disk extended presence
     ; @param[in] dl drive number
     ;;
     check_disk_extended:

@@ -69,14 +69,14 @@ ExternalProject_Add(
 
 set(CMAKE_C_COMPILER "${32PREFIX_DIR}/bin/${64TARGET}-gcc")
 set(CMAKE_CXX_COMPILER "${32PREFIX_DIR}/bin/${64TARGET}-g++")
-set(CMAKE_ASM_COMPILER nasm)
+set(CMAKE_ASM_COMPILER yasm)
 enable_language(ASM)
-set(CMAKE_ASM_COMPILER nasm)
+set(CMAKE_ASM_COMPILER yasm)
 set(CMAKE_FLAGS "")
 set(CMAKE_ASM_COMPILE_OBJECT
     "<CMAKE_ASM_COMPILER> <FLAGS> <SOURCE> -o <OBJECT>"
 )
-set(CMAKE_ASM_FLAGS  "${CMAKE_ASM_FLAGS} -g -F dwarf -f elf64")
+set(CMAKE_ASM_FLAGS  "${CMAKE_ASM_FLAGS} -g dwarf2 -f elf64")
 set(CMAKE_ASM_FLAGS_DEBUG "")
 set(CMAKE_LINKER "${64PREFIX_DIR}/bin/${64TARGET}-g++")
 set(CMAKE_ASM_LINK_EXECUTABLE "${CMAKE_LINKER} <CMAKE_ASM_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
@@ -97,7 +97,7 @@ add_custom_target(run
 )
 
 add_custom_target(debug
-    COMMAND qemu-system-x86_64 -debugcon stdio -hda ${DISK_IMAGE} -s -S -m 128M
+    COMMAND qemu-system-x86_64 -debugcon stdio -hda ${DISK_IMAGE} -s -S -m 5G
     DEPENDS build_disk stage1_debug_output stage2_debug_output
     COMMENT "Debugging the boot image in QEMU"
 )
@@ -105,7 +105,6 @@ add_custom_target(debug
 # Define a custom target to process the .asm file
 add_custom_target(asm4doxy
     COMMAND ./scripts/asm4doxy.pl src/bootloader/stage1/boot.asm -od src/bootloader/stage1/
-    COMMAND ./scripts/asm4doxy.pl src/bootloader/stage2/entry.asm -od src/bootloader/stage2/
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}  # Set working directory
     COMMENT "Running asm4doxy to preprocess boot.asm for Doxygen"
     VERBATIM
