@@ -3,6 +3,9 @@ bits 64
 global inb
 global outb
 
+global inw
+global outw
+
 section .text
 
     inb:

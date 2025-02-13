@@ -15,6 +15,7 @@
 #include "stdio.h"
 #include "memory/memory.h"
 #include "arch/x86/idt.h"
+#include "arch/x86/ata.h"
 
 /**
  * @brief Entry function
@@ -41,6 +42,8 @@ extern "C" void Start(uint16_t bootDrive, uint32_t partition, uint64_t memoryMap
     memcpy(&memoryMap, (void *)memoryMapAddress, memoryMapSize * 24);
 
     idt_init();
+
+    ATA_IDENTIFY_PRIMARY();
 
     for(;;);
 

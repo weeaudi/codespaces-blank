@@ -27,3 +27,4 @@ typedef struct {
 #define ATA_LBA_PORT_4            0x1F5
 #define ATA_IDENTIFY_COMMAND      0xEC
 
+void ATA_IDENTIFY_PRIMARY();
