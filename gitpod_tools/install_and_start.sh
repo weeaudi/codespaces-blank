@@ -1,5 +1,5 @@
 sudo apt update
-sudo apt install ubuntu-gnome-desktop tightvncserver xfce4 xfce4-goodies -y
+sudo apt install tightvncserver xfce4 xfce4-goodies -y
 vncserver
 vncserver -kill :1
 echo "startxfce4" >> ~/.vnc/xstartup
