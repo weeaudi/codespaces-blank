@@ -16,3 +16,15 @@ section .text
         mov rax, rsi
         out dx, al
         ret
+
+    inw:
+        xor rax, rax
+        mov rdx, rdi
+        in ax, dx
+        ret
+
+    outw:
+        mov rdx, rdi
+        mov rax, rsi
+        out dx, ax
+        ret

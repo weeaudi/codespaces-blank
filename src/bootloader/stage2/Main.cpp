@@ -34,6 +34,10 @@ extern "C" void Start(uint16_t bootDrive, uint32_t partition, uint64_t memoryMap
 
     puts("Hello World!\nThis is a large test of everything!!!!!");
 
+    if(memoryMapSize > 32){
+        memoryMapSize = 32;
+    }
+
     memcpy(&memoryMap, (void *)memoryMapAddress, memoryMapSize * 24);
 
     idt_init();
