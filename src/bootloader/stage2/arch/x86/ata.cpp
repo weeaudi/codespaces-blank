@@ -4,9 +4,9 @@
  * @brief A simple bare bones ATA PIO driver for stage2
  * @version 0.1
  * @date 2025-02-13
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 
 #include "ata.h"
@@ -17,52 +17,120 @@ static IDENTIFY_RETURN identifyReturn;
 
 uint16_t buffer[256];
 
-void ATA_IDENTIFY_PRIMARY(){
-  outw(ATA_PRIMARY_DRIVE_SELECT, ATA_MASTER_DRIVE);
-  outw(ATA_LBA_PORT_1, 0);
-  outw(ATA_LBA_PORT_2, 0);
-  outw(ATA_LBA_PORT_3, 0);
-  outw(ATA_LBA_PORT_4, 0);
-  outw(ATA_PRIMARY_PORT, ATA_IDENTIFY_COMMAND);
+void ATA_IDENTIFY_PRIMARY()
+{
+    outw(ATA_PRIMARY_RW_DRIVE, ATA_PRIMARY_ID_SELECT);
+    outw(ATA_PRIMARY_RW_SECTOR_COUNT, 0);
+    outw(ATA_PRIMARY_RW_LBA0, 0);
+    outw(ATA_PRIMARY_RW_LBA1, 0);
+    outw(ATA_PRIMARY_RW_LBA2, 0);
+    outw(ATA_PRIMARY_W_COMMAND, ATA_CMD_IDENTIFY);
 
-  uint16_t status;
-  status = inw(ATA_PRIMARY_PORT);
+    uint16_t status;
+    status = inw(ATA_PRIMARY_R_STATUS);
 
-  if (status == 0){
-    return;
-  }
-
-  while ((status & 0x80) != 0){
-    uint16_t lba_mid, lba_high;
-
-    lba_mid = inw(ATA_LBA_PORT_3);
-
-    if (lba_mid != 0){
-      return;
+    if (status == 0)
+    {
+        return;
     }
 
-    lba_high = inw(ATA_LBA_PORT_4);
+    while ((status & 0x80) != 0)
+    {
+        uint16_t lba_mid, lba_high;
 
-    if(lba_high != 0){
-      return;
+        lba_mid = inw(ATA_PRIMARY_RW_LBA1);
+
+        if (lba_mid != 0)
+        {
+            return;
+        }
+
+        lba_high = inw(ATA_PRIMARY_RW_LBA2);
+
+        if (lba_high != 0)
+        {
+            return;
+        }
+
+        status = inw(ATA_PRIMARY_R_STATUS);
+
+        if ((status & 8) != 0)
+        {
+            break;
+        }
+
+        if ((status & 1) != 0)
+        {
+            return;
+        }
     }
 
-    status = inw(ATA_PRIMARY_PORT);
-
-    if ((status & 8) != 0){
-      break;
+    for (uint16_t i = 0; i < 256; i++)
+    {
+        buffer[i] = inw(ATA_PRIMARY_RW_DATA);
     }
 
-    if ((status & 1) != 0){
-      return;
+    memcpy(&identifyReturn, (void *)buffer, 512);
+}
+
+bool ATA_READ_PRIMARY(void *buffer, uint8_t sectorCount, uint32_t LBA)
+{
+    // set drive
+    DriveHeadRegister drive;
+    drive.head      =   LBA << 24 & 0x0F;
+    drive.drv       =   0;
+    drive.lba       =   1;
+    drive.always1_5 =   1;
+    drive.always1_7 =   1; 
+
+    outb(ATA_PRIMARY_RW_DRIVE, *(reinterpret_cast<uint8_t*>(&drive)));
+
+    outb(ATA_PRIMARY_W_FEATURE, 0);
+
+    outb(ATA_PRIMARY_RW_SECTOR_COUNT, sectorCount);
+    outb(ATA_PRIMARY_RW_LBA0, LBA & 0xFF);
+    outb(ATA_PRIMARY_RW_LBA1, LBA << 8 & 0xFF);
+    outb(ATA_PRIMARY_RW_LBA1, LBA << 16 & 0xFF);
+
+    outb(ATA_PRIMARY_W_COMMAND, ATA_CMD_READ_PIO);
+
+    // make sure that err and df are properly cleared
+    inb(ATA_PRIMARY_R_STATUS);
+    inb(ATA_PRIMARY_R_STATUS);
+    inb(ATA_PRIMARY_R_STATUS);
+    inb(ATA_PRIMARY_R_STATUS);
+
+    uint8_t status = inb(ATA_PRIMARY_R_STATUS);
+
+read_loop:
+
+    while (true) {
+        if ((status & 0x80) == 0){
+            if ((status & 0x8) == 8){
+                break;
+            }
+        }
+        if (status & 0x1 != 0){
+            return false;
+        }
+        if (status & 0x20 != 0){
+            return false;
+        }
+
+        status = inb(ATA_PRIMARY_R_STATUS);
     }
 
-  }
+    for(int i = 0; i < 256; i++){
+        *(uint16_t*)buffer = inw(ATA_PRIMARY_RW_DATA);
+        buffer = static_cast<uint8_t*>(buffer) + 2;
+    }
 
-  for (uint16_t i = 0; i < 256; i++){
-    buffer[i] = inw(ATA_PRIMARY_DATA);
-  }
+    sectorCount -= 1;
 
-  memcpy(&identifyReturn, (void*)buffer, 256);
+    if (sectorCount != 0) {
+        goto read_loop;
+    }
+
+    return true;
 
 }

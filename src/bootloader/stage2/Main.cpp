@@ -45,6 +45,10 @@ extern "C" void Start(uint16_t bootDrive, uint32_t partition, uint64_t memoryMap
 
     ATA_IDENTIFY_PRIMARY();
 
+    uint8_t buffer[512];
+
+    ATA_READ_PRIMARY(&buffer, 1, 2);
+
     for(;;);
 
 }
