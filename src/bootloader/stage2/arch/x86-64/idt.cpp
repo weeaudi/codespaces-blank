@@ -27,10 +27,6 @@ extern "C" void __attribute__((noreturn)) exception_handler() {
     while(1); // should never reach (for compiler warnings)
 }
 
-extern "C" void __attribute__((noreturn)) test_func(){
-    while(1);
-}
-
 void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags) {
     idt_entry_t* descriptor = &idt[vector];
 
@@ -45,6 +41,7 @@ void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags) {
 
 static bool vectors[IDT_MAX_DESCRIPTORS];
 
+/// @brief The table of error handlers
 extern void* isr_stub_table[];
 
 void idt_init() {

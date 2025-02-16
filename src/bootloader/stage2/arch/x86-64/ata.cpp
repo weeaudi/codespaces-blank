@@ -15,8 +15,6 @@
 
 static IDENTIFY_RETURN identifyReturn;
 
-uint16_t buffer[256];
-
 void ATA_IDENTIFY_PRIMARY()
 {
     outw(ATA_PRIMARY_RW_DRIVE, ATA_PRIMARY_ID_SELECT);
@@ -64,6 +62,8 @@ void ATA_IDENTIFY_PRIMARY()
             return;
         }
     }
+
+    uint16_t buffer[256];
 
     for (uint16_t i = 0; i < 256; i++)
     {

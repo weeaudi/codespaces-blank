@@ -38,9 +38,6 @@ typedef struct {
 /// @brief general exception handler
 extern "C" void __attribute__((noreturn)) exception_handler();
 
-/// @brief general exception handler
-extern "C" void __attribute__((noreturn)) test_func();
-
 /// @brief sets an entry in the idt to isr
 /// @param[in] vector the vector number for the interrupt
 /// @param[in] isr pointer to the handler

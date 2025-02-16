@@ -14,8 +14,11 @@
 #include "stdint.h"
 #include "stdio.h"
 #include "memory/memory.h"
-#include "arch/x86/idt.h"
-#include "arch/x86/ata.h"
+#include "arch/x86-64/idt.h"
+#include "arch/x86-64/ata.h"
+
+/// @brief the full memory map
+memory_map memoryMap[32];
 
 /**
  * @brief Entry function
@@ -26,9 +29,6 @@
  * @param[in] memoryMapAddress address to the memory map
  * @param[in] memoryMapSize number of entries in the memory map
  */
-
-memory_map memoryMap[32];
-
 extern "C" void Start(uint16_t bootDrive, uint32_t partition, uint64_t memoryMapAddress, uint8_t memoryMapSize){
 
     clear_screen();
@@ -45,9 +45,9 @@ extern "C" void Start(uint16_t bootDrive, uint32_t partition, uint64_t memoryMap
 
     ATA_IDENTIFY_PRIMARY();
 
-    uint8_t buffer[512];
+    uint8_t buffer[512 * 10];
 
-    ATA_READ_PRIMARY(&buffer, 1, 2);
+    ATA_READ_PRIMARY(&buffer, 10, 2);
 
     for(;;);
 

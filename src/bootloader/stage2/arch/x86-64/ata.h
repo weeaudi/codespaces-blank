@@ -80,6 +80,19 @@ typedef struct {
 } __attribute__((packed)) DriveHeadRegister;
 
 
-
+/**
+ * @brief Currently Unused (will identify the current primary drive)
+ * 
+ */
 void ATA_IDENTIFY_PRIMARY();
+
+/**
+ * @brief Reads from the primary disk into buffer
+ * 
+ * @param[out] buffer Buffer to write to. must be 512 bytes per sector
+ * @param[in] sectorCount number of sectors to read
+ * @param[in] LBA LBA to read from starting with 0
+ * @return true Sucsses 
+ * @return false Failed
+ */
 bool ATA_READ_PRIMARY(void *buffer, uint8_t sectorCount, uint32_t LBA);
