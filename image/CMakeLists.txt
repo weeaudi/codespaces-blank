@@ -3,7 +3,7 @@ set(STAGE2_ELF   "${CMAKE_BINARY_DIR}/src/bootloader/stage2/stage2.elf")
 set(KERNEL_ELF   "${CMAKE_SOURCE_DIR}/tmp/kernel.elf")
 
 set(DISKSIZE_BYTES 512000000) # 512 * 1000 * 1000  512 MB
-set(DISK_FS_TYPE "fat16")
+set(DISK_FS_TYPE "fat32")
 
 set(DISK_IMAGE "${CMAKE_BINARY_DIR}/out/aidos_${CMAKE_PROJECT_VERSION}.raw")
 

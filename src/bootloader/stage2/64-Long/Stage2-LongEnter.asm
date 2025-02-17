@@ -35,7 +35,7 @@ section .text
 
         cli
 
-        ; call _init ; c++ global constructors
+        call _init ; c++ global constructors
 
         ; pass the address of the boot partition to the stage2 main function
         xor rdx, rdx

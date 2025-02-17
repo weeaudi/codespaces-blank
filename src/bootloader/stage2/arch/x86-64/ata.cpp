@@ -77,7 +77,7 @@ bool ATA_READ_PRIMARY(void *buffer, uint8_t sectorCount, uint32_t LBA)
 {
     // set drive
     DriveHeadRegister drive;
-    drive.head      =   LBA << 24 & 0x0F;
+    drive.head      =   LBA >> 24 & 0x0F;
     drive.drv       =   0;
     drive.lba       =   1;
     drive.always1_5 =   1;
@@ -88,9 +88,9 @@ bool ATA_READ_PRIMARY(void *buffer, uint8_t sectorCount, uint32_t LBA)
     outb(ATA_PRIMARY_W_FEATURE, 0);
 
     outb(ATA_PRIMARY_RW_SECTOR_COUNT, sectorCount);
-    outb(ATA_PRIMARY_RW_LBA0, LBA & 0xFF);
-    outb(ATA_PRIMARY_RW_LBA1, LBA << 8 & 0xFF);
-    outb(ATA_PRIMARY_RW_LBA1, LBA << 16 & 0xFF);
+    outb(ATA_PRIMARY_RW_LBA0, LBA);
+    outb(ATA_PRIMARY_RW_LBA1, LBA >> 8);
+    outb(ATA_PRIMARY_RW_LBA2, LBA >> 16);
 
     outb(ATA_PRIMARY_W_COMMAND, ATA_CMD_READ_PIO);
 
@@ -121,7 +121,8 @@ read_loop:
     }
 
     for(int i = 0; i < 256; i++){
-        *(uint16_t*)buffer = inw(ATA_PRIMARY_RW_DATA);
+        uint16_t word = inw(ATA_PRIMARY_RW_DATA);
+        memcpy(buffer, &word, 2);
         buffer = static_cast<uint8_t*>(buffer) + 2;
     }
 
