@@ -6,188 +6,221 @@ extern to_64_prot
 
 %define ENDL 0x0A, 0x0D
 
-KbdControllerDataPort:              equ 0x60
-KbdControllerCommandPort:           equ 0x64
-KbdControllerDisableKeyboard:       equ 0xAD
-KbdControllerEnableKeyboard:        equ 0xAE
-KbdControllerReadCtrlOutputPort:    equ 0xD0
-KbdControllerWriteCtrlOutputPort:   equ 0xD1
+; Keyboard controller port definitions
+KbdControllerDataPort              equ 0x60
+KbdControllerCommandPort           equ 0x64
+KbdControllerDisableKeyboard       equ 0xAD
+KbdControllerEnableKeyboard        equ 0xAE
+KbdControllerReadCtrlOutputPort    equ 0xD0
+KbdControllerWriteCtrlOutputPort   equ 0xD1
 
 section .text
 
-    to_32_prot:
+;---------------------------------------------------------------
+; Main Function: to_32_prot
+;
+; Description:
+;   Prepares the system to switch from 16-bit real mode to
+;   32-bit protected mode by performing the following steps:
+;     1. Clears the screen.
+;     2. Displays a message.
+;     3. Disables interrupts.
+;     4. Enables the A20 line.
+;     5. Loads the Global Descriptor Table (GDT).
+;     6. Sets the Protection Enable (PE) bit in CR0.
+;     7. Jumps to the 32-bit code segment.
+;---------------------------------------------------------------
+to_32_prot:
+    call clr_scrn
 
-        call clr_scrn
+    ; Print message: "Switching to 32bit protected mode!"
+    mov si, to_prot_message
+    call puts
 
-        mov si, to_prot_message
-        call puts
+    cli             ; Disable interrupts
+    call EnableA20  ; Enable the A20 line
+    call LoadGDT    ; Load the Global Descriptor Table
 
-        cli             ; 1 - disable interrupts
-        call EnableA20  ; 2 - enable A20 line
-        call LoadGDT    ; 3 - load GDT
+    ; Set PE bit in CR0 (enable protected mode)
+    mov eax, cr0
+    or al, 1
+    mov cr0, eax
 
-        ; 4 - set PE bit in CR0
-        mov eax, cr0
-        or al, 1
-        mov cr0, eax
+    ; Jump to the 32-bit code segment (selector 0x08)
+    jmp dword 08h:.PMODE32
 
-        ; 5 - jump to 32-bit code segment
-        jmp dword 08h:.PMODE32
+    cli
+    hlt
 
-        cli
-        hlt
+.PMODE32:
+    [bits 32]
+    call to_64_prot
+    cli
+    hlt
 
-    .PMODE32:
-        [bits 32]
+;---------------------------------------------------------------
+; Function: EnableA20
+;
+; Description:
+;   Enables the A20 line so that memory above 1MB can be accessed.
+;   It uses keyboard controller commands to disable/enable the
+;   keyboard and set the A20 bit.
+;---------------------------------------------------------------
+EnableA20:
+    [bits 16]
+    ; Disable keyboard input
+    call A20WaitInput
+    mov al, KbdControllerDisableKeyboard
+    out KbdControllerCommandPort, al
 
-        call to_64_prot
+    ; Read controller output port
+    call A20WaitInput
+    mov al, KbdControllerReadCtrlOutputPort
+    out KbdControllerCommandPort, al
 
-        cli
-        hlt
+    call A20WaitOutput
+    in al, KbdControllerDataPort
 
-    ;;
-    ; @brief enables the A20 gate for switching to 32 bit mode
-    ;;
-    EnableA20:
-        [bits 16]
-        ; disable keyboard
-        call A20WaitInput
-        mov al, KbdControllerDisableKeyboard
-        out KbdControllerCommandPort, al
+    push eax
 
-        ; read controller output port
-        call A20WaitInput
-        mov al, KbdControllerReadCtrlOutputPort
-        out KbdControllerCommandPort, al
+    ; Write to controller output port to enable A20
+    call A20WaitInput
+    mov al, KbdControllerWriteCtrlOutputPort
+    out KbdControllerCommandPort, al
 
-        call A20WaitOutput
-        in al, KbdControllerDataPort
+    call A20WaitInput
 
-        push eax
+    pop eax
+    or al, 2            ; Set A20 bit (bit 2)
+    out KbdControllerDataPort, al
 
-        ; write controller output port
-        call A20WaitInput
-        mov al, KbdControllerWriteCtrlOutputPort
-        out KbdControllerCommandPort, al
+    ; Enable keyboard
+    call A20WaitInput
+    mov al, KbdControllerEnableKeyboard
+    out KbdControllerCommandPort, al
 
-        call A20WaitInput
+    call A20WaitInput
+    ret
 
-        pop eax
-        or al, 2            ; set A20 bit (bit 2)
-        out KbdControllerDataPort, al
+;---------------------------------------------------------------
+; Function: A20WaitInput
+;
+; Description:
+;   Waits until the keyboard controller's input buffer is empty.
+;   It polls the command port until bit 1 (input buffer) is clear.
+;---------------------------------------------------------------
+A20WaitInput:
+    [bits 16]
+    in al, KbdControllerCommandPort
+    test al, 2
+    jnz A20WaitInput
+    ret
 
-        ; enable keyboard
-        call A20WaitInput
-        mov al, KbdControllerEnableKeyboard
-        out KbdControllerCommandPort, al
+;---------------------------------------------------------------
+; Function: A20WaitOutput
+;
+; Description:
+;   Waits until the keyboard controller's output buffer is full,
+;   so that data can be read.
+;---------------------------------------------------------------
+A20WaitOutput:
+    [bits 16]
+    in al, KbdControllerCommandPort
+    test al, 1
+    jz A20WaitOutput
+    ret
 
-        call A20WaitInput
-        ret
+;---------------------------------------------------------------
+; Function: LoadGDT
+;
+; Description:
+;   Loads the Global Descriptor Table (GDT) using the LGDT instruction.
+;---------------------------------------------------------------
+LoadGDT:
+    [bits 16]
+    lgdt [g_GDTDesc]
+    ret
 
+;---------------------------------------------------------------
+; Function: puts
+;
+; Description:
+;   Prints a null-terminated string to the screen using MMIO.
+;   It uses the video memory at 0xB8000 as the output destination.
+;
+; Input:
+;   SI - Pointer to the null-terminated string.
+;---------------------------------------------------------------
+puts:
+    [bits 16]
+    push si
+    push ax
+    push ebx
 
-    A20WaitInput:
-        [bits 16]
-        ; wait until status bit 2 (input buffer) is 0
-        ; by reading from command port, we read status byte
-        in al, KbdControllerCommandPort
-        test al, 2
-        jnz A20WaitInput
-        ret
+.puts_loop:
+    lodsb              ; Load next byte from DS:SI into AL.
+    or al, al          ; Check for null terminator.
+    jz .puts_done
+    mov ebx, [screen_pointer]
+    mov [ebx], al      ; Write character to video memory.
+    add ebx, 2         ; Advance pointer (each character cell is 2 bytes).
+    mov [screen_pointer], ebx
+    jmp .puts_loop
 
-    A20WaitOutput:
-        [bits 16]
-        ; wait until status bit 1 (output buffer) is 1 so it can be read
-        in al, KbdControllerCommandPort
-        test al, 1
-        jz A20WaitOutput
-        ret
+.puts_done:
+    pop ebx
+    pop ax
+    pop si
+    ret
 
-    ;;
-    ; @brief loads the global descriptor table
-    ;;
-    LoadGDT:
-        [bits 16]
-        lgdt [g_GDTDesc]
-        ret
+;---------------------------------------------------------------
+; Function: clr_scrn
+;
+; Description:
+;   Clears the screen by resetting the cursor and printing blank
+;   spaces across the entire display (2000 characters for 80x25 mode).
+;---------------------------------------------------------------
+clr_scrn:
+    push ax
+    push bx
+    push cx
+    push dx
 
-    ;;
-    ; @brief prints a string using MMIO
-    ; @param[in] si address of string
-    ;;
-    puts:
-        [bits 16]
-        push si
-        push ax
-        push ebx
+    ; Reset the cursor to the top-left corner
+    mov ah, 0x02
+    mov bh, 0
+    mov dx, 0
+    int 0x10
 
-    .loop:
-        lodsb
-        or al,al
-        jz .done
-        mov ebx, [screen_pointer]
-        mov [ebx], al
-        add ebx, 2
-        mov [screen_pointer], ebx
-        jmp .loop
-    .done:
+    ; Print spaces to clear the screen
+    mov ah, 0x0E
+    mov al, " "
+    mov cx, 0
 
-        pop ebx
-        pop ax
-        pop si
+.clr_loop:
+    cmp cx, 2000       ; 80 columns * 25 rows = 2000 characters
+    je .clr_done
+    inc cx
+    int 0x10
+    jmp .clr_loop
 
-        ret
+.clr_done:
+    ; Reset the cursor again to the home position
+    mov ah, 0x02
+    mov bh, 0
+    mov dx, 0
+    int 0x10
 
-    ;;
-    ; @brief clears the screen
-    ;;
-    clr_scrn:
-        push ax
-        push bx
-        push cx
-        push dx
-
-        mov ah, 0x02
-        mov bh, 0
-        mov dx, 0
-
-        int 0x10
-
-        mov ah, 0x0E
-        mov al, " "
-
-        mov cx, 0
-
-    .loop:
-
-        cmp cx, 2000
-        je .done
-        inc cx
-
-        int 0x10
-
-        jmp .loop
-
-    .done:
-
-        mov ah, 0x02
-        mov bh, 0
-        mov dx, 0
-
-        int 0x10
-
-        pop dx
-        pop cx
-        pop bx
-        pop ax
-
-        ret
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
 
 section .data
-
     screen_pointer: dd 0xB8000
 
 section .rodata
-
     to_prot_message: db "Switching to 32bit protected mode!", 0
 
     g_GDT: 

@@ -1,0 +1,53 @@
+menu "Build Chain"
+
+menu "gcc"
+
+config GCC_VERSION
+    string "GCC Version"
+    default "13.2.0"
+    help
+      Specify the version of GCC to be built.
+
+config GCC_URL
+    string "GCC URL Template"
+    default "https://ftp.gnu.org/gnu/gcc/gcc-@GCC_VERSION@/gcc-@GCC_VERSION@.tar.gz"
+    help
+      URL template for GCC. Use @GCC_VERSION@ to represent the chosen GCC version.
+
+endmenu
+
+menu "binutils"
+
+config BINUTILS_VERSION
+    string "Binutils Version"
+    default "2.41"
+    help
+      Specify the version of Binutils to be built.
+
+config BINUTILS_URL
+    string "Binutils URL Template"
+    default "https://ftp.gnu.org/gnu/binutils/binutils-@BINUTILS_VERSION@.tar.gz"
+    help
+      URL template for Binutils. Use @BINUTILS_VERSION@ to represent the chosen Binutils version.
+
+endmenu
+
+config TARGET
+    string "Target Triplet"
+    default "x86_64-elf"
+    help
+      Specify the target triplet for the toolchain.
+
+config PREFIX_DIR
+    string "Installation Prefix Directory"
+    default "Tools/@TARGET@"
+    help
+      Installation directory template. The placeholder @TARGET@ will be replaced with the chosen target.
+
+endmenu
+
+config VERSION_NUMBER
+    string "Version Number"
+    default "0.0.3"
+    help
+      Specify the version number of the project.

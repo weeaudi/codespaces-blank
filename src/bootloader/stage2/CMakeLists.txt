@@ -16,8 +16,8 @@ add_executable(stage2 ${STAGE2_SRC})
 set_target_properties(stage2 PROPERTIES OUTPUT_NAME "stage2.elf")
 
 # Define paths to GCC-provided CRT objects.
-set(CRTBEGIN_OBJ ${64PREFIX_DIR}/lib/gcc/x86_64-elf/13.2.0/crtbegin.o)
-set(CRTEND_OBJ   ${64PREFIX_DIR}/lib/gcc/x86_64-elf/13.2.0/crtend.o)
+set(CRTBEGIN_OBJ ${PREFIX_DIR}/lib/gcc/x86_64-elf/13.2.0/crtbegin.o)
+set(CRTEND_OBJ   ${PREFIX_DIR}/lib/gcc/x86_64-elf/13.2.0/crtend.o)
 
 ##############################
 # Build our custom CRT objects using YASM

@@ -7,9 +7,9 @@ import re
 import parted
 import sh
 from pathlib import Path
-from shutil import copy2
 from elftools.elf.elffile import ELFFile
 from elftools.elf.descriptions import describe_p_type
+from pyfatfs import PyFatFS
 
 SECTOR_SIZE = 512
 
@@ -41,15 +41,10 @@ def create_filesystem(target: str, fs_type: str, partition_offset: int, reserved
     """
     if fs_type.startswith('fat'):
         mkfs_fat = sh.Command('mkfs.fat')
-        offset_bytes = partition_offset * SECTOR_SIZE
-        fat_bits = fs_type[3:] 
-
-       
         if fs_type == 'fat32':
             reserved_sectors += 1
-
         mkfs_fat(
-            '-F', fat_bits,
+            '-F', fs_type[3:],
             '-n', 'AIDOS',
             '-R', reserved_sectors,
             f'--offset={str(partition_offset)}',
@@ -74,6 +69,7 @@ def _find_symbol_in_map_file(map_file: Path, symbol: str):
                 if match:
                     return int(match.group(1), base=16)
     return None
+
 
 def install_stage1(target, stage1_bin, boot_data_lba, offset=0):
     """Write Stage1 into the target image at the correct offset, patching the relevant symbols."""
@@ -166,52 +162,72 @@ def install_stage2(target, stage2_bin, boot_data_lba, offset=0, limit=0):
                 ftarget.write(entry['load_addr'].to_bytes(4, 'little'))
                 ftarget.write(entry['count'].to_bytes(2, 'little'))
 
-mount = False
-used_libguestfs = False
-
-def mount_fs(image_path: str, mount_point: str, partition_offset_sectors: int = 2048):
+def update_fat_filesystem(image_path: str, partition_offset: int, kernel_path: str, extra_files: list):
     """
-    Tries to mount the filesystem using libguestfs first. If that fails, uses the `mount` command with an offset.
+    Update the FAT32 filesystem inside the disk image using PyFatFS in user space.
+    This avoids the need for mounting via root or libguestfs. (MANY ISSUES WITH THOSE 2 T-T)
+    It opens the disk image file at the partition offset, creates /boot (if missing),
+    and copies the kernel and any extra files into the filesystem.
     """
-    offset_bytes = partition_offset_sectors * SECTOR_SIZE
-    os.makedirs(mount_point, exist_ok=True)
-
-    try:
-        # Attempt to use libguestfs
-        sh.guestmount('--add', image_path, '--mount', '/dev/sda1', mount_point)
-        global used_libguestfs
-        used_libguestfs = True
-    except sh.ErrorReturnCode as e:
-        print(f"libguestfs mount failed: {e}")
-        print(f"Falling back to mount with offset...")
-        try:
-            # Fallback to `mount` command
-            sh.sudo.mount(
-                '-o', f'loop,offset={offset_bytes}',
-                image_path, mount_point
-            )
-            print(f"Mounted {image_path} at {mount_point} using loop device with offset {offset_bytes}.")
-            mount = True
-        except sh.ErrorReturnCode as mount_error:
-            print(f"Failed to mount using fallback method: {mount_error}")
-            raise RuntimeError("Failed to mount the image using both libguestfs and mount.")
-
-def unmount_fs(mount_point: str):
-    """
-    Unmounts the filesystem. If libguestfs was used, uses fusermount. Otherwise, uses umount.
-    """
-    try:
-        if used_libguestfs:
-            time.sleep(2)
-            sh.fusermount('-u', mount_point)
-        else:
-            sh.sudo.umount(mount_point)
-    except sh.ErrorReturnCode as e:
-        print(f"Failed to unmount {mount_point}: {e}")
-        raise 
-
-
-
+    print(f"> Updating FAT32 filesystem in {image_path} at offset {partition_offset} sectors...")
+    pf = PyFatFS.PyFatFS(filename=image_path, offset=partition_offset * SECTOR_SIZE)
+    
+    # Ensure the /boot directory exists.
+    if not pf.exists("/boot"):
+        print("  - Creating /boot directory")
+        pf.makedir("/boot")
+    
+    # Copy the kernel file into /boot/kernel.elf.
+    print(f"  - Copying kernel: {kernel_path} to /boot/kernel.elf")
+    if not pf.exists("/boot/kernel.elf"):
+        pf.create("/boot/kernel.elf")
+    with open(kernel_path, 'rb') as kf:
+        kernel_data = kf.read()
+    with pf.open("/boot/kernel.elf", "wb") as dest:
+        dest.write(kernel_data)
+    
+    # Process extra files (if any)
+    for extra in extra_files:
+        base = os.path.basename(extra)
+        if os.path.isfile(extra):
+            print(f"  - Copying extra file: {extra}")
+            if not pf.exists("/" + base):
+                pf.create("/" + base)
+            with open(extra, 'rb') as ef:
+                data = ef.read()
+            with pf.open("/" + base, "wb") as dest:
+                dest.write(data)
+        elif os.path.isdir(extra):
+            target_dir = "/" + base
+            print(f"  - Creating directory for extra files: {target_dir}")
+            try:
+                pf.makedir(target_dir)
+            except Exception:
+                pass
+            # Recursively copy directory contents.
+            for root_dir, dirs, files in os.walk(extra):
+                rel_path = os.path.relpath(root_dir, extra)
+                if rel_path == ".":
+                    current_target = target_dir
+                else:
+                    current_target = os.path.join(target_dir, rel_path).replace(os.sep, "/")
+                    try:
+                        pf.makedir(current_target)
+                    except Exception:
+                        pass
+                for file in files:
+                    local_file = os.path.join(root_dir, file)
+                    target_file = os.path.join(current_target, file).replace(os.sep, "/")
+                    print(f"    - Copying {local_file} to {target_file}")
+                    if not pf.exists(target_file):
+                        pf.create(target_file)
+                    with open(local_file, 'rb') as lf:
+                        data = lf.read()
+                    with pf.open(target_file, "wb") as dest:
+                        dest.write(data)
+    
+    pf.close()  # Ensure changes are written back.
+    print("> FAT32 filesystem update complete.")
 
 def build_disk(image_path, stage1_bin, stage2_bin, kernel_path, size_bytes, fs_type, extra_files=None):
     """
@@ -219,77 +235,45 @@ def build_disk(image_path, stage1_bin, stage2_bin, kernel_path, size_bytes, fs_t
       1. Create a disk image file of size_bytes
       2. Create an MBR partition table
       3. Format partition with fs_type
-      4. Install Stage1/Stage2
-      5. Mount & copy kernel + extra_files
+      4. Install Stage1/Stage2 bootloaders
+      5. Update the FAT32 filesystem with the kernel and extra files
     """
     partition_offset = 2048  # commonly 1MB = 2048 sectors if SECTOR_SIZE=512
     stage2_sectors = math.ceil(os.stat(stage2_bin).st_size / SECTOR_SIZE)
 
-    # 1) Create the empty image
+    # 1) Create the empty image.
     size_sectors = math.ceil(size_bytes / SECTOR_SIZE)
     generate_image_file(image_path, size_sectors)
 
-    # 2) Partition table
+    # 2) Create the partition table.
     print("> Creating partition table...")
     create_partition_table(image_path, partition_offset)
 
-    # 3) Format partition
+    # 3) Format the partition.
     print(f"> Formatting with {fs_type} at offset={partition_offset}...")
     create_filesystem(image_path, fs_type, partition_offset, reserved_sectors=stage2_sectors)
 
-    # 4) Install Stage1 & Stage2
+    # 4) Install Stage1 & Stage2 bootloaders.
     print("> Installing Stage1...")
     install_stage1(image_path, stage1_bin, boot_data_lba=1, offset=partition_offset)
 
     print("> Installing Stage2...")
-    # The limit for Stage2’s data is partition_offset - 2 (so we don’t overwrite partition?)
     install_stage2(image_path, stage2_bin, boot_data_lba=1, offset=2, limit=partition_offset-2)
 
-    # 5) Mount the filesystem, copy kernel and any other files
-    mount_dir = os.path.join(os.path.dirname(image_path), f"mount_{int(time.time())}")
-    os.makedirs(mount_dir, exist_ok=True)
-    try:
-        print(f"> Mounting {image_path} at {mount_dir}...")
-        mount_fs(image_path, mount_dir)
+    # 5) Install kernel and extra files
+    if fs_type.lower() in ['fat12', 'fat16', 'fat32']:
+        print("> Updating FAT32 filesystem with kernel and extra files...")
+        update_fat_filesystem(image_path, partition_offset, kernel_path, extra_files if extra_files else [])
+    else:
+        print("> Filesystem type is not FAT; skipping filesystem update.")
 
-        # copy the kernel into /boot
-        boot_dir = os.path.join(mount_dir, 'boot')
-        os.makedirs(boot_dir, exist_ok=True)
-        print(f"  - copying kernel: {kernel_path}")
-        copy2(kernel_path, boot_dir)
-
-        # Copy any extra files
-        if extra_files:
-            for f in extra_files:
-                rel_name = os.path.basename(f)
-                dst_path = os.path.join(mount_dir, rel_name)
-                if os.path.isdir(f):
-                    # Recursively copy the directory if you wish
-                    # Or create an empty directory
-                    os.makedirs(dst_path, exist_ok=True)
-                    # You could do a more complex copy if needed
-                else:
-                    print(f"  - copying extra file: {f}")
-                    copy2(f, dst_path)
-
-    finally:
-        print("> Unmounting...")
-        try:
-            unmount_fs(mount_dir)
-        except Exception as e:
-            print("Warning: unmount failed:", e)
-
-        os.rmdir(mount_dir)
-
-        time.sleep(1)
-
-        print("> Done Generating Disk")
+    print("> Done Generating Disk")
 
 def main():
     """
-    Usage: build_disk.py <image_path> <stage1_bin> <stage2_bin> <kernel> <size_bytes> <filesystem> [files...]
+    Usage: build_disk.py <image_path> <stage1_bin> <stage2_bin> <kernel> <size_bytes> <fs_type> [extra_files...]
     Example:
-        python3 build_disk.py disk_image.raw stage1.bin stage2.elf kernel.elf 33554432 fat16 root/file1 root/dir2 ...
+        python3 build_disk.py disk_image.raw stage1.bin stage2.elf kernel.elf 33554432 fat32 file1.txt dir2 ...
     """
     if len(sys.argv) < 7:
         print("Usage: build_disk.py <image_path> <stage1_bin> <stage2_bin> <kernel> <size_bytes> <fs_type> [extra_files...]")
