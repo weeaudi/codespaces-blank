@@ -17,38 +17,51 @@ enable_language(ASM_NASM)
 # Check for kconfig-mconf (part of kconfig-frontends)
 find_program(KCONFIG_MCONF_EXECUTABLE kconfig-mconf)
 if(NOT KCONFIG_MCONF_EXECUTABLE)
-  message(FATAL_ERROR "kconfig-mconf is not available. Please install kconfig-frontends.")
-endif()
+  message(WARNING "kconfig-mconf is not available. Please install kconfig-frontends to use configuration.")
+  set(GCC_VERSION 13.2.0)
+  set(GCC_URL "https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz")
 
-#----------------------------------------------------------------------------
-# Run kconfig-mconf if configuration does not exist
-#----------------------------------------------------------------------------
-# Path to the generated configuration file
-set(CONFIG_FILE "${CMAKE_BINARY_DIR}/.config")
+  set(BINUTILS_VERSION 2.41)
+  set(BINUTILS_URL "https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz")
 
-if(EXISTS ${CONFIG_FILE})
-  message(STATUS "Parsing configuration file: ${CONFIG_FILE}")
-  file(STRINGS "${CONFIG_FILE}" CONFIG_LINES)
+  set(TARGET x86_64-elf)
+  set(PREFIX_DIR "Tools/${TARGET}")
 
-  foreach(line IN LISTS CONFIG_LINES)
-    # Skip comment lines.
-    if(line MATCHES "^#")
-      continue()
-    endif()
-    # Match lines like: CONFIG_VARNAME="value"
-    if(line MATCHES "^CONFIG_([A-Za-z0-9_]+)=(.*)")
-      set(varName ${CMAKE_MATCH_1})
-      set(varValue ${CMAKE_MATCH_2})
-      # Remove any surrounding quotes from the value
-      string(REGEX REPLACE "^\"(.*)\"$" "\\1" varValue "${varValue}")
-      message(STATUS "Parsed variable: ${varName} = ${varValue}")
-      # Set the variable in the CMake cache (or as a normal variable)
-      set(${varName} "${varValue}" CACHE STRING "Parsed from .config")
-    endif()
-  endforeach()
+  set(VERSION_NUMBER 0.0.3)
+
 else()
-  message(FATAL_ERROR "Configuration file not found.  Please run kconfig-mconf ../Kconfig to
+
+  #----------------------------------------------------------------------------
+  # Run kconfig-mconf if configuration does not exist
+  #----------------------------------------------------------------------------
+  # Path to the generated configuration file
+  set(CONFIG_FILE "${CMAKE_BINARY_DIR}/.config")
+
+  if(EXISTS ${CONFIG_FILE})
+    message(STATUS "Parsing configuration file: ${CONFIG_FILE}")
+    file(STRINGS "${CONFIG_FILE}" CONFIG_LINES)
+
+    foreach(line IN LISTS CONFIG_LINES)
+      # Skip comment lines.
+      if(line MATCHES "^#")
+        continue()
+      endif()
+      # Match lines like: CONFIG_VARNAME="value"
+      if(line MATCHES "^CONFIG_([A-Za-z0-9_]+)=(.*)")
+        set(varName ${CMAKE_MATCH_1})
+        set(varValue ${CMAKE_MATCH_2})
+        # Remove any surrounding quotes from the value
+        string(REGEX REPLACE "^\"(.*)\"$" "\\1" varValue "${varValue}")
+        message(STATUS "Parsed variable: ${varName} = ${varValue}")
+        # Set the variable in the CMake cache (or as a normal variable)
+        set(${varName} "${varValue}" CACHE STRING "Parsed from .config")
+      endif()
+    endforeach()
+  else()
+    message(FATAL_ERROR "Configuration file not found.  Please run kconfig-mconf ../Kconfig to
   generate the configuration.")
+  endif()
+
 endif()
 
 project(aidos3 VERSION ${VERSION_NUMBER})
@@ -88,7 +101,7 @@ ExternalProject_Add(
 
 set(CMAKE_C_COMPILER "${PREFIX_DIR}/bin/${TARGET}-gcc")
 set(CMAKE_CXX_COMPILER "${PREFIX_DIR}/bin/${TARGET}-g++")
-set(CMAKE_ASM_NASM_FLAGS  "-f elf64 -g")
+set(CMAKE_ASM_NASM_FLAGS "-f elf64 -g")
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
 set(CMAKE_LINKER "${PREFIX_DIR}/bin/${TARGET}-g++")
 set(CMAKE_AR "${PREFIX_DIR}/bin/${TARGET}-ar")
@@ -103,13 +116,13 @@ set(DISK_IMAGE "${CMAKE_BINARY_DIR}/out/aidos_${CMAKE_PROJECT_VERSION}.raw")
 
 set(CMAKE_VS_STARTUP_PROJECT "run")
 add_custom_target(run
-    COMMAND qemu-system-x86_64 -hda ${DISK_IMAGE}
-    DEPENDS build_disk
-    COMMENT "Running the boot image in QEMU"
+  COMMAND qemu-system-x86_64 -hda ${DISK_IMAGE}
+  DEPENDS build_disk
+  COMMENT "Running the boot image in QEMU"
 )
 
 add_custom_target(debug
-    COMMAND qemu-system-x86_64 -debugcon stdio -hda ${DISK_IMAGE} -s -S
-    DEPENDS build_disk stage1_debug_output stage2_debug_output
-    COMMENT "Debugging the boot image in QEMU"
+  COMMAND qemu-system-x86_64 -debugcon stdio -hda ${DISK_IMAGE} -s -S
+  DEPENDS build_disk stage1_debug_output stage2_debug_output
+  COMMENT "Debugging the boot image in QEMU"
 )
