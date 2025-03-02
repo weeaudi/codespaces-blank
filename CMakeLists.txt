@@ -5,10 +5,10 @@ include(ExternalProject)
 #----------------------------------------------------------------------------
 # Check for required tools
 #----------------------------------------------------------------------------
-# Check for Yasm
+# Check for Nasm
 find_program(NASM_EXECUTABLE nasm)
 if(NOT NASM_EXECUTABLE)
-  message(FATAL_ERROR "Yasm is not installed. Please install Yasm.")
+  message(FATAL_ERROR "Nasm is not installed. Please install Nasm.")
 endif()
 
 set(CMAKE_ASM_COMPILER ${NASM_EXECUTABLE})
