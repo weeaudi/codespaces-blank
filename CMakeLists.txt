@@ -17,15 +17,15 @@ enable_language(ASM_NASM)
 # Check for kconfig-mconf (part of kconfig-frontends)
 find_program(KCONFIG_MCONF_EXECUTABLE kconfig-mconf)
 if(NOT KCONFIG_MCONF_EXECUTABLE)
-  message(WARNING "kconfig-mconf is not available. Please install kconfig-frontends to use configuration.")
+  message(STATUS "kconfig-mconf is not available. Please install kconfig-frontends to use configuration.")
   set(GCC_VERSION 13.2.0)
-  set(GCC_URL "https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz")
+  set(GCC_URL https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz)
 
   set(BINUTILS_VERSION 2.41)
-  set(BINUTILS_URL "https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz")
+  set(BINUTILS_URL https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz)
 
   set(TARGET x86_64-elf)
-  set(PREFIX_DIR "Tools/${TARGET}")
+  set(PREFIX_DIR Tools/${TARGET})
 
   set(VERSION_NUMBER 0.0.3)
 
@@ -58,8 +58,18 @@ else()
       endif()
     endforeach()
   else()
-    message(FATAL_ERROR "Configuration file not found.  Please run kconfig-mconf ../Kconfig to
+    message(STATUS "Configuration file not found.  Please run kconfig-mconf ../Kconfig to
   generate the configuration.")
+    set(GCC_VERSION 13.2.0)
+    set(GCC_URL https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz)
+
+    set(BINUTILS_VERSION 2.41)
+    set(BINUTILS_URL https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz)
+
+    set(TARGET x86_64-elf)
+    set(PREFIX_DIR Tools/${TARGET})
+
+    set(VERSION_NUMBER 0.0.3)
   endif()
 
 endif()
@@ -70,8 +80,6 @@ project(aidos3 VERSION ${VERSION_NUMBER})
 string(REPLACE "@GCC_VERSION@" "${GCC_VERSION}" GCC_URL "${GCC_URL}")
 string(REPLACE "@BINUTILS_VERSION@" "${BINUTILS_VERSION}" BINUTILS_URL "${BINUTILS_URL}")
 string(REPLACE "@TARGET@" "${TARGET}" PREFIX_DIR "${PREFIX_DIR}")
-
-set(PREFIX_DIR ${CMAKE_SOURCE_DIR}/${PREFIX_DIR})
 
 #----------------------------------------------------------------------------
 # Add external projects for build tools
