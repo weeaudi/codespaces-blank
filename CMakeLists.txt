@@ -25,7 +25,7 @@ if(NOT KCONFIG_MCONF_EXECUTABLE)
   set(BINUTILS_URL https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz)
 
   set(TARGET x86_64-elf)
-  set(PREFIX_DIR Tools/${TARGET})
+  set(PREFIX_DIR "Tools/${TARGET}")
 
   set(VERSION_NUMBER 0.0.3)
 
@@ -67,7 +67,7 @@ else()
     set(BINUTILS_URL https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz)
 
     set(TARGET x86_64-elf)
-    set(PREFIX_DIR Tools/${TARGET})
+    set(PREFIX_DIR "Tools/${TARGET}")
 
     set(VERSION_NUMBER 0.0.3)
   endif()
