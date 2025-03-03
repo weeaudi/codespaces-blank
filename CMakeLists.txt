@@ -84,6 +84,10 @@ string(REPLACE "@TARGET@" "${TARGET}" PREFIX_DIR "${PREFIX_DIR}")
 #----------------------------------------------------------------------------
 # Add external projects for build tools
 #----------------------------------------------------------------------------
+
+message(STATUS ${PREFIX_DIR})
+message(STATUS ${CMAKE_SOURCE_DIR})
+message(STATUS ${CMAKE_SOURCE_DIR}/${PREFIX_DIR})
 ExternalProject_Add(
   binutils
   URL ${BINUTILS_URL}
